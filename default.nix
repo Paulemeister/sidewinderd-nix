@@ -6,7 +6,7 @@ pkgs.stdenv.mkDerivation {
   src = pkgs.fetchFromGitHub {
     owner = "tolga9009";
     repo = "sidewinderd";
-    rev = "1.4.4";
+    rev = "0.4.4";
     hash = "sha256-vlmL/Wz31/xAmKV5hxQ3H5eQOCZRFKbqRjRCxQn4pdo=";
   };
 
@@ -17,15 +17,12 @@ pkgs.stdenv.mkDerivation {
   #    PREFIX = "${placeholder "out"}";
   #  };
   installPhase = ''
-     pwd
-     ls -a
-     mkdir -p $out/etc/systemd/system
-     mkdir -p $out/bin
-     ls $src
-
+    runHook preInstall
+    mkdir -p $out/bin
     cp ./src/sidewinderd $out/bin/sidewinderd
-    cp $src/etc/sidewinderd.conf $out/etc/sidewinderd.conf
-    cp ./src/sidewinderd.service $out/etc/systemd/system/sidewinderd.service
+    #cp $src/etc/sidewinderd.conf $out/etc/sidewinderd.conf
+    #cp ./src/sidewinderd.service $out/etc/systemd/system/sidewinderd.service
+    runHook postInstall
   '';
 
   meta = with pkgs; {

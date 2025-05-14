@@ -8,31 +8,25 @@
     nixpkgs,
     ...
   }: let
-    pkgs = import nixpkgs;
-    sidewinderd = pkgs.callPackage ./default.nix {};
-  in {
-    packages."x86_64-linux".sidewinderd = sidewinderd;
-
-    nixosModules.sidewinderd = {
-      config,
-      lib,
-      pkgs,
-      ...
-    }: {
-      options.services.sidewinderd.enable = lib.mkEnableOption "Sidewinderd systemd-Dienst";
-
-      config = lib.mkIf config.services.sidewinderd.enable {
-        systemd.services.sidewinderd = {
-          description = "Sidewinderd Daemon";
-          after = ["multi-user.target"];
-          wantedBy = ["multi-user.target"];
-          serviceConfig = {
-            Type = "simple";
-            ExecStart = "${sidewinderd}/bin/sidewinderd";
-          };
-        };
-        environment.systemPackages = [sidewinderd];
+    #  pkgs = import nixpkgs {system = "x86_64-linux";};
+    #   sidewinderd = pkgs.callPackage ./default.nix {};
+    system = "x86_64-linux";
+  in
+    {
+      #packages."x86_64-linux".sidewinderd = sidewinderd;
+      nixosModules.sidewinderd = import ./module.nix;
+    }
+    // (let
+      overlay = final: prev: {
+        sidewinderd = self.packages.${system}.sidewinderd;
       };
-    };
-  };
+      pkgs = nixpkgs.legacyPackages.${system}.extend overlay;
+    in {
+      packages.${system} = {
+        sidewinderd = pkgs.callPackage ./default.nix {};
+      };
+      checks.${system} = {
+        sidewinderd-test = import ./sidewinderd-test.nix {inherit pkgs self;};
+      };
+    });
 }
