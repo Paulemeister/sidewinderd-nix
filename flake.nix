@@ -28,5 +28,6 @@
       checks.${system} = {
         sidewinderd-test = import ./sidewinderd-test.nix {inherit pkgs self;};
       };
+      overlays.default = overlay;
     });
 }
