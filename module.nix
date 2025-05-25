@@ -38,7 +38,7 @@
     environment.systemPackages = [pkgs.sidewinderd];
 
     system.activationScripts.makeSidewinderPath = lib.mkIf (config.services.sidewinderd.settings ? workdir) ''
-      mkdir -p ${config.services.sidewinderd.workdir}
+      mkdir -p ${config.services.sidewinderd.settings.workdir}
     '';
     environment.etc."sidewinderd.conf".text =
       lib.generators.toKeyValue {
