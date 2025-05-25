@@ -18,7 +18,9 @@ pkgs.nixosTest {
   };
 
   testScript = ''
-    print(machine.execute("cat /etc/sidewinderd.conf",False)[1])
+    #print(machine.execute("cat /etc/sidewinderd.conf",False)[1])
+    machine.wait_for_file("/etc/sidewinderd.conf", timeout = 1)
+    machine.wait_for_file("/var/lib/sidewinderd", timeout = 1)
     machine.wait_for_unit("sidewinderd.service")
   '';
 }

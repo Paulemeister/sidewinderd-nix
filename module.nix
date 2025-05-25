@@ -3,7 +3,9 @@
   lib,
   pkgs,
   ...
-}: {
+}: let
+  cfg = config.services.sidewinderd;
+in {
   options.services.sidewinderd = {
     enable = lib.mkEnableOption "sidewinderd Daemon";
     settings = lib.mkOption {
@@ -25,7 +27,7 @@
     };
   };
 
-  config = lib.mkIf config.services.sidewinderd.enable {
+  config = lib.mkIf cfg.enable {
     systemd.services.sidewinderd = {
       description = "Sidewinderd Daemon";
       after = ["multi-user.target"];
@@ -37,8 +39,8 @@
     };
     environment.systemPackages = [pkgs.sidewinderd];
 
-    system.activationScripts.makeSidewinderPath = lib.mkIf (config.services.sidewinderd.settings ? workdir) ''
-      mkdir -p ${config.services.sidewinderd.settings.workdir}
+    system.activationScripts.makeSidewinderPath = ''
+      mkdir -p ${cfg.settings.workdir}
     '';
     environment.etc."sidewinderd.conf".text =
       lib.generators.toKeyValue {
@@ -59,6 +61,6 @@
             else "\"${v}\"";
         in "${k} = ${vStr};";
       }
-      config.services.sidewinderd.settings;
+      cfg.settings;
   };
 }
