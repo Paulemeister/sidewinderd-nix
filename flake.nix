@@ -15,6 +15,7 @@
     {
       #packages."x86_64-linux".sidewinderd = sidewinderd;
       nixosModules.sidewinderd = import ./module.nix;
+      homeManagerModules.sidewinderd = import ./home-manager-module.nix;
     }
     // (let
       overlay = final: prev: {
@@ -29,5 +30,9 @@
         sidewinderd-test = import ./sidewinderd-test.nix {inherit pkgs self;};
       };
       overlays.default = overlay;
+      devShells.${system}.default = pkgs.mkShell {
+        packages = with pkgs; [cmake libconfig tinyxml-2 udev clang-tools];
+        CMAKE_EXPORT_COMPILE_COMMANDS = 1;
+      };
     });
 }

@@ -13,7 +13,7 @@ in {
         options = {
           user = lib.mkOption {
             type = lib.types.str;
-            default = "root";
+            default = "${config.home.username}";
           };
           capture_delays = lib.mkOption {
             type = lib.types.bool;
@@ -21,47 +21,30 @@ in {
           };
           "pid-file" = lib.mkOption {
             type = lib.types.str;
-            default = "/var/run/sidewinderd.pid";
+            default = "/tmp/sidewinderd.pid";
           };
           workdir = lib.mkOption {
             type = lib.types.str;
-            default = "/var/lib/sidewinderd";
+            default = config.xdg.configHome + "/sidewinderd/";
           };
         };
       };
       default = {};
     };
-    addUdevRule = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = ''
-        If true, adds a udev rule that enables the
-        read/write acces to /dev/hidraw* for the
-        `plugdev` group.
-        Also adds the `plugdev` group.
-        Add your user to that group to enable sidewinderd
-        to run non privileged.
-        (required for usage with the home-manager module)
-      '';
-    };
   };
 
   config = lib.mkIf cfg.enable {
-    systemd.services.sidewinderd = {
-      description = "Sidewinderd Daemon";
-      after = ["multi-user.target"];
-      wantedBy = ["multi-user.target"];
-      serviceConfig = {
+    systemd.user.services.sidewinderd = {
+      Unit.Description = "Sidewinderd Daemon";
+      Install.WantedBy = ["default.target"];
+      Service = {
         Type = "simple";
-        ExecStart = "${pkgs.sidewinderd}/bin/sidewinderd";
+        ExecStart = "${pkgs.sidewinderd}/bin/sidewinderd -c ${config.xdg.configHome + "/sidewinderd/sidewinderd.conf"}";
       };
     };
-    environment.systemPackages = [pkgs.sidewinderd];
+    #environment.systemPackages = [pkgs.sidewinderd];
 
-    system.activationScripts.makeSidewinderPath = ''
-      mkdir -p ${cfg.settings.workdir}
-    '';
-    environment.etc."sidewinderd.conf".text =
+    xdg.configFile."sidewinderd/sidewinderd.conf".text =
       lib.generators.toKeyValue {
         mkKeyValue = k: v:
         # Wenn Wert ein String: in Anführungszeichen
@@ -82,10 +65,4 @@ in {
       }
       cfg.settings;
   };
-  # // lib.mkIf cfg.addUdevRule {
-  #   services.udev.extraRules = ''
-  #     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", MODE="0660", GROUP="plugdev"
-  #   '';
-  #   users.groups.plugdev = {};
-  # };
 }
